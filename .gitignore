@@ -1,0 +1,5 @@
+# Python intermediate files
+__pycache__
+
+# Pycharm
+.idea
