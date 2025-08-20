@@ -21,22 +21,76 @@ from parser_state import ParserState
 
 
 class WikiParser:
+    """
+    A simple parser for processing Wiki-style markup into structured output.
+
+    The parser recognizes formatting markers such as bold ('''), italics (''),
+    bold+italic ('''''), links ([[...]]), and templates ({{...}}). Text is
+    processed into segments, each tagged with its corresponding `ParserState`.
+
+    Attributes:
+        state_stack (list[ParserState]): A stack representing the current parsing states.
+        output (list[tuple[ParserState, str]]): The parsed output as a list of (state, text) tuples.
+        buffer (list[str]): A temporary buffer for accumulating characters before flushing them.
+    """
+
     def __init__(self):
+        """
+        Initialize a new WikiParser instance.
+
+        Starts with the parser in the `TEXT` state, with empty output and buffer.
+        """
         self.state_stack = [ParserState.TEXT]
         self.output = []
         self.buffer = []
 
     def push_state(self, state):
+        """
+        Push a new parser state onto the state stack.
+
+        Args:
+            state (ParserState): The new parsing state to enter.
+        """
         self.state_stack.append(state)
 
     def pop_state(self):
+        """
+        Pop the most recent parser state from the state stack.
+
+        Ensures that at least one state (TEXT) remains on the stack.
+        """
         if len(self.state_stack) > 1:
             self.state_stack.pop()
 
     def current_state(self):
+        """
+        Get the current parsing state.
+
+        Returns:
+            ParserState: The parser state at the top of the stack.
+        """
         return self.state_stack[-1]
 
     def parse(self, text):
+        """
+        Parse a string of Wiki-style text into structured output.
+
+        Recognized markup includes:
+            - ''''' (bold+italic toggle)
+            - '''   (bold toggle)
+            - ''    (italic toggle)
+            - [[ ]] (link toggle)
+            - {{ }} (template toggle)
+
+        Text outside markup is treated as plain text.
+
+        Args:
+            text (str): The input text to parse.
+
+        Returns:
+            list[tuple[ParserState, str]]: A list of (state, text) tuples,
+            where `state` indicates the formatting applied to `text`.
+        """
         i = 0
         while i < len(text):
             ch = text[i]
@@ -108,6 +162,12 @@ class WikiParser:
         return self.output
 
     def flush_buffer(self):
+        """
+        Flush the current buffer into the output list.
+
+        Joins the buffered characters into a string and appends it to the output
+        along with the current parser state. Clears the buffer afterward.
+        """
         if not self.buffer:
             return
         state = self.current_state()
