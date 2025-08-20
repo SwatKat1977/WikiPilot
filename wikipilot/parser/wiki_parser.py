@@ -1,3 +1,23 @@
+"""
+This source file is part of WikiPilot
+For the latest info, see https://github.com/SwatKat1977/WikiPilot
+
+Copyright 2025 SwatKat1977
+
+    This program is free software : you can redistribute it and /or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.If not, see < https://www.gnu.org/licenses/>.
+"""
+
 class WikiParser:
     def __init__(self):
         self.state_stack = ["TEXT"]
@@ -94,10 +114,15 @@ class WikiParser:
         self.buffer = []
 
 
+from parser_state import ParserState
+
+print(f"PARSER: {ParserState.bold_italic}")
+print(f"PARSER: {ParserState.text}")
+
 # Example usage
 parser = WikiParser()
 text = "This is ''italic'', '''bold''', and '''''bold+italic'''''. Also a [[Link]] and a {{Template}}."
 result = parser.parse(text)
 
-for state, content in result:
-    print(f"{state}: {content}")
+for fsm_state, fsm_content in result:
+    print(f"{fsm_state}: {fsm_content}")
