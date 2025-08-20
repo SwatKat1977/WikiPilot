@@ -17,10 +17,12 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
+from parser_state import ParserState
+
 
 class WikiParser:
     def __init__(self):
-        self.state_stack = ["TEXT"]
+        self.state_stack = [ParserState.text]
         self.output = []
         self.buffer = []
 
@@ -42,44 +44,44 @@ class WikiParser:
 
             # Handle bold+italic
             if text[i:i+5] == "'''''":
-                if state == "BOLD_ITALIC":
+                if state == ParserState.bold_italic:
                     self.flush_buffer()
                     self.pop_state()
                 else:
                     self.flush_buffer()
-                    self.push_state("BOLD_ITALIC")
+                    self.push_state(ParserState.bold_italic)
                 i += 5
                 continue
 
             # Handle bold
             elif text[i:i+3] == "'''":
-                if state == "BOLD":
+                if state == ParserState.bold:
                     self.flush_buffer()
                     self.pop_state()
                 else:
                     self.flush_buffer()
-                    self.push_state("BOLD")
+                    self.push_state(ParserState .bold)
                 i += 3
                 continue
 
             # Handle italics
             elif text[i:i+2] == "''":
-                if state == "ITALIC":
+                if state == ParserState.italic:
                     self.flush_buffer()
                     self.pop_state()
                 else:
                     self.flush_buffer()
-                    self.push_state("ITALIC")
+                    self.push_state(ParserState.italic)
                 i += 2
                 continue
 
             # Handle links
             elif text[i:i+2] == "[[":
                 self.flush_buffer()
-                self.push_state("LINK")
+                self.push_state(ParserState.link)
                 i += 2
                 continue
-            elif text[i:i+2] == "]]" and state == "LINK":
+            elif text[i:i+2] == "]]" and state == ParserState.link:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
@@ -88,10 +90,10 @@ class WikiParser:
             # Handle templates
             elif text[i:i+2] == "{{":
                 self.flush_buffer()
-                self.push_state("TEMPLATE")
+                self.push_state(ParserState.template)
                 i += 2
                 continue
-            elif text[i:i+2] == "}}" and state == "TEMPLATE":
+            elif text[i:i+2] == "}}" and state == ParserState.template:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
