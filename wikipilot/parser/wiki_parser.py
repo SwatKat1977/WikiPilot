@@ -22,7 +22,7 @@ from parser_state import ParserState
 
 class WikiParser:
     def __init__(self):
-        self.state_stack = [ParserState.text]
+        self.state_stack = [ParserState.TEXT]
         self.output = []
         self.buffer = []
 
@@ -44,44 +44,44 @@ class WikiParser:
 
             # Handle bold+italic
             if text[i:i+5] == "'''''":
-                if state == ParserState.bold_italic:
+                if state == ParserState.BOLD_ITALIC:
                     self.flush_buffer()
                     self.pop_state()
                 else:
                     self.flush_buffer()
-                    self.push_state(ParserState.bold_italic)
+                    self.push_state(ParserState.BOLD_ITALIC)
                 i += 5
                 continue
 
             # Handle bold
             elif text[i:i+3] == "'''":
-                if state == ParserState.bold:
+                if state == ParserState.BOLD:
                     self.flush_buffer()
                     self.pop_state()
                 else:
                     self.flush_buffer()
-                    self.push_state(ParserState .bold)
+                    self.push_state(ParserState .BOLD)
                 i += 3
                 continue
 
             # Handle italics
             elif text[i:i+2] == "''":
-                if state == ParserState.italic:
+                if state == ParserState.ITALIC:
                     self.flush_buffer()
                     self.pop_state()
                 else:
                     self.flush_buffer()
-                    self.push_state(ParserState.italic)
+                    self.push_state(ParserState.ITALIC)
                 i += 2
                 continue
 
             # Handle links
             elif text[i:i+2] == "[[":
                 self.flush_buffer()
-                self.push_state(ParserState.link)
+                self.push_state(ParserState.LINK)
                 i += 2
                 continue
-            elif text[i:i+2] == "]]" and state == ParserState.link:
+            elif text[i:i+2] == "]]" and state == ParserState.LINK:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
@@ -90,10 +90,10 @@ class WikiParser:
             # Handle templates
             elif text[i:i+2] == "{{":
                 self.flush_buffer()
-                self.push_state(ParserState.template)
+                self.push_state(ParserState.TEMPLATE)
                 i += 2
                 continue
-            elif text[i:i+2] == "}}" and state == ParserState.template:
+            elif text[i:i+2] == "}}" and state == ParserState.TEMPLATE:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
@@ -114,17 +114,3 @@ class WikiParser:
         content = "".join(self.buffer)
         self.output.append((state, content))
         self.buffer = []
-
-
-from parser_state import ParserState
-
-print(f"PARSER: {ParserState.bold_italic}")
-print(f"PARSER: {ParserState.text}")
-
-# Example usage
-parser = WikiParser()
-text = "This is ''italic'', '''bold''', and '''''bold+italic'''''. Also a [[Link]] and a {{Template}}."
-result = parser.parse(text)
-
-for fsm_state, fsm_content in result:
-    print(f"{fsm_state}: {fsm_content}")
