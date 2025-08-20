@@ -101,25 +101,29 @@ class WikiParser:
                 if state == ParserState.BOLD_ITALIC:
                     self.flush_buffer()
                     self.pop_state()
+
                 else:
                     self.flush_buffer()
                     self.push_state(ParserState.BOLD_ITALIC)
+
                 i += 5
                 continue
 
             # Handle bold
-            elif text[i:i+3] == "'''":
+            if text[i:i+3] == "'''":
                 if state == ParserState.BOLD:
                     self.flush_buffer()
                     self.pop_state()
+
                 else:
                     self.flush_buffer()
                     self.push_state(ParserState .BOLD)
+
                 i += 3
                 continue
 
             # Handle italics
-            elif text[i:i+2] == "''":
+            if text[i:i+2] == "''":
                 if state == ParserState.ITALIC:
                     self.flush_buffer()
                     self.pop_state()
@@ -130,33 +134,33 @@ class WikiParser:
                 continue
 
             # Handle links
-            elif text[i:i+2] == "[[":
+            if text[i:i+2] == "[[":
                 self.flush_buffer()
                 self.push_state(ParserState.LINK)
                 i += 2
                 continue
-            elif text[i:i+2] == "]]" and state == ParserState.LINK:
+
+            if text[i:i+2] == "]]" and state == ParserState.LINK:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
                 continue
 
             # Handle templates
-            elif text[i:i+2] == "{{":
+            if text[i:i+2] == "{{":
                 self.flush_buffer()
                 self.push_state(ParserState.TEMPLATE)
                 i += 2
                 continue
-            elif text[i:i+2] == "}}" and state == ParserState.TEMPLATE:
+            if text[i:i+2] == "}}" and state == ParserState.TEMPLATE:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
                 continue
 
             # Regular text
-            else:
-                self.buffer.append(ch)
-                i += 1
+            self.buffer.append(ch)
+            i += 1
 
         self.flush_buffer()
         return self.output
