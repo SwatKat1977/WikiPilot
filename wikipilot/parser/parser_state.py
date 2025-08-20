@@ -21,9 +21,28 @@ import enum
 
 
 class ParserState(enum.Enum):
-    bold = enum.auto()
-    bold_italic = enum.auto()
-    italic = enum.auto()
-    link = enum.auto()
-    template = enum.auto()
-    text = enum.auto()
+    """
+    Enumeration representing the different parsing states for text processing.
+    These states are typically used in a parser to determine how to interpret
+    and format portions of text.
+    """
+
+    BOLD = enum.auto()
+    """State indicating that the parser is currently processing bold text."""
+
+    BOLD_ITALIC = enum.auto()
+    """State indicating that the parser is currently processing text that is
+       both bold and italic."""
+
+    ITALIC = enum.auto()
+    """State indicating that the parser is currently processing italic text."""
+
+    LINK = enum.auto()
+    """State indicating that the parser is currently processing a hyperlink."""
+
+    TEMPLATE = enum.auto()
+    """State indicating that the parser is currently processing a template or
+       placeholder structure."""
+
+    TEXT = enum.auto()
+    """Default state indicating that the parser is processing plain text."""
