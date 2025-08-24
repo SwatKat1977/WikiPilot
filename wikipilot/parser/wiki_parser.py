@@ -51,6 +51,18 @@ class WikiParser:
         self.state_stack = [ParserState.TEXT]
         self.output = []
         self.buffer = []
+        self.rules = [
+            # token, length, enter_state, exit_state
+            (BOLD_ITALIC_MARKDOWN, 5, ParserState.BOLD_ITALIC, ParserState.BOLD_ITALIC),
+            (BOLD_MARKDOWN, 3, ParserState.BOLD, ParserState.BOLD),
+            (ITALIC_MARKDOWN, 2, ParserState.ITALIC, ParserState.ITALIC),
+
+            (LINK_MARKDOWN_OPEN, 2, ParserState.LINK, None),
+            (LINK_MARKDOWN_CLOSE, 2, None, ParserState.LINK),
+
+            (TEMPLATE_MARKDOWN_OPEN, 2, ParserState.TEMPLATE, None),
+            (TEMPLATE_MARKDOWN_CLOSE, 2, None, ParserState.TEMPLATE),
+        ]
 
     def push_state(self, state):
         """
@@ -61,7 +73,7 @@ class WikiParser:
         """
         self.state_stack.append(state)
 
-    def pop_state(self):
+    def pop_state(self) -> None:
         """
         Pop the most recent parser state from the state stack.
 
@@ -70,7 +82,7 @@ class WikiParser:
         if len(self.state_stack) > 1:
             self.state_stack.pop()
 
-    def current_state(self):
+    def current_state(self) -> ParserState:
         """
         Get the current parsing state.
 
@@ -79,104 +91,44 @@ class WikiParser:
         """
         return self.state_stack[-1]
 
-    def parse(self, text):
-        """
-        Parse a string of Wiki-style text into structured output.
+    def parse(self, text: str):
+        i: int = 0
 
-        Recognized markup includes:
-            - ''''' (bold+italic toggle)
-            - '''   (bold toggle)
-            - ''    (italic toggle)
-            - [[ ]] (link toggle)
-            - {{ }} (template toggle)
-
-        Text outside markup is treated as plain text.
-
-        Args:
-            text (str): The input text to parse.
-
-        Returns:
-            list[tuple[ParserState, str]]: A list of (state, text) tuples,
-            where `state` indicates the formatting applied to `text`.
-        """
-        i = 0
         while i < len(text):
-            ch = text[i]
-            state = self.current_state()
+            matched: bool = False
 
-            # Handle bold+italic
-            if text[i:i+5] == BOLD_ITALIC_MARKDOWN:
-                if state == ParserState.BOLD_ITALIC:
+            # Try each rule
+            for token, length, *states in self.rules:
+                if text.startswith(token, i):
                     self.flush_buffer()
-                    self.pop_state()
+                    enter_state = states[0] if len(states) > 0 else None
+                    exit_state = states[1] if len(states) > 1 else None
 
-                else:
-                    self.flush_buffer()
-                    self.push_state(ParserState.BOLD_ITALIC)
+                    # Toggle logic
+                    if exit_state and self.current_state() == exit_state:
+                        self.pop_state()
 
-                i += 5
-                continue
+                    elif enter_state:
+                        # If same state, pop; otherwise, push
+                        if self.current_state() == enter_state:
+                            self.pop_state()
 
-            # Handle bold
-            if text[i:i+3] == BOLD_MARKDOWN:
-                if state == ParserState.BOLD:
-                    self.flush_buffer()
-                    self.pop_state()
+                        else:
+                            self.push_state(enter_state)
 
-                else:
-                    self.flush_buffer()
-                    self.push_state(ParserState .BOLD)
+                    i += length
+                    matched = True
+                    break
 
-                i += 3
-                continue
-
-            # Handle italics
-            if text[i:i+2] == ITALIC_MARKDOWN:
-                if state == ParserState.ITALIC:
-                    self.flush_buffer()
-                    self.pop_state()
-                else:
-                    self.flush_buffer()
-                    self.push_state(ParserState.ITALIC)
-                i += 2
-                continue
-
-            # Handle links
-            if text[i:i+2] == LINK_MARKDOWN_OPEN:
-                self.flush_buffer()
-                self.push_state(ParserState.LINK)
-                i += 2
-                continue
-
-            if text[i:i+2] == LINK_MARKDOWN_CLOSE and \
-               state == ParserState.LINK:
-                self.flush_buffer()
-                self.pop_state()
-                i += 2
-                continue
-
-            # Handle templates
-            if text[i:i+2] == TEMPLATE_MARKDOWN_OPEN:
-                self.flush_buffer()
-                self.push_state(ParserState.TEMPLATE)
-                i += 2
-                continue
-
-            if text[i:i+2] == TEMPLATE_MARKDOWN_CLOSE and \
-               state == ParserState.TEMPLATE:
-                self.flush_buffer()
-                self.pop_state()
-                i += 2
-                continue
-
-            # Regular text
-            self.buffer.append(ch)
-            i += 1
+            if not matched:
+                # No rule matched, treat as normal text
+                self.buffer.append(text[i])
+                i += 1
 
         self.flush_buffer()
         return self.output
 
-    def flush_buffer(self):
+    def flush_buffer(self) -> None:
         """
         Flush the current buffer into the output list.
 
