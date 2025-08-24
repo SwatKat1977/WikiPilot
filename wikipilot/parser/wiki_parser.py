@@ -18,6 +18,7 @@ Copyright 2025 SwatKat1977
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
 from parser_state import ParserState
+from pattern_rule import PatternRule
 
 BOLD_ITALIC_MARKDOWN: str = "'''''"
 BOLD_MARKDOWN: str = "'''"
@@ -51,17 +52,37 @@ class WikiParser:
         self.state_stack = [ParserState.TEXT]
         self.output = []
         self.buffer = []
+
         self.rules = [
-            # token, length, enter_state, exit_state
-            (BOLD_ITALIC_MARKDOWN, 5, ParserState.BOLD_ITALIC, ParserState.BOLD_ITALIC),
-            (BOLD_MARKDOWN, 3, ParserState.BOLD, ParserState.BOLD),
-            (ITALIC_MARKDOWN, 2, ParserState.ITALIC, ParserState.ITALIC),
+            # Toggle states (enter_state == exit_state)
+            PatternRule(BOLD_ITALIC_MARKDOWN,
+                        5,
+                        enter_state=ParserState.BOLD_ITALIC,
+                        exit_state=ParserState.BOLD_ITALIC),
+            PatternRule(BOLD_MARKDOWN,
+                        3,
+                        enter_state=ParserState.BOLD,
+                        exit_state=ParserState.BOLD),
+            PatternRule(ITALIC_MARKDOWN,
+                        2,
+                        enter_state=ParserState.ITALIC,
+                        exit_state=ParserState.ITALIC),
 
-            (LINK_MARKDOWN_OPEN, 2, ParserState.LINK, None),
-            (LINK_MARKDOWN_CLOSE, 2, None, ParserState.LINK),
+            # Link (open/close pair)
+            PatternRule(LINK_MARKDOWN_OPEN,
+                        2,
+                        enter_state=ParserState.LINK),
+            PatternRule(LINK_MARKDOWN_CLOSE,
+                        2,
+                        exit_state=ParserState.LINK),
 
-            (TEMPLATE_MARKDOWN_OPEN, 2, ParserState.TEMPLATE, None),
-            (TEMPLATE_MARKDOWN_CLOSE, 2, None, ParserState.TEMPLATE),
+            # Template (open/close pair)
+            PatternRule(TEMPLATE_MARKDOWN_OPEN,
+                        2,
+                        enter_state=ParserState.TEMPLATE),
+            PatternRule(TEMPLATE_MARKDOWN_CLOSE,
+                        2,
+                        exit_state=ParserState.TEMPLATE),
         ]
 
     def push_state(self, state):
@@ -91,37 +112,34 @@ class WikiParser:
         """
         return self.state_stack[-1]
 
-    def parse(self, text: str):
-        i: int = 0
-
+    def parse(self, text):
+        i = 0
         while i < len(text):
-            matched: bool = False
+            matched = False
 
-            # Try each rule
-            for token, length, *states in self.rules:
-                if text.startswith(token, i):
+            for rule in self.rules:
+                if rule.matches(text, i):
                     self.flush_buffer()
-                    enter_state = states[0] if len(states) > 0 else None
-                    exit_state = states[1] if len(states) > 1 else None
 
-                    # Toggle logic
-                    if exit_state and self.current_state() == exit_state:
+                    if rule.exit_state and self.current_state() == \
+                       rule.exit_state:
+                        # Closing token
                         self.pop_state()
 
-                    elif enter_state:
-                        # If same state, pop; otherwise, push
-                        if self.current_state() == enter_state:
+                    elif rule.enter_state:
+                        # Opening or toggle token
+                        if self.current_state() == rule.enter_state:
                             self.pop_state()
 
                         else:
-                            self.push_state(enter_state)
+                            self.push_state(rule.enter_state)
 
-                    i += length
+                    i += rule.length
                     matched = True
                     break
 
             if not matched:
-                # No rule matched, treat as normal text
+                # Regular text
                 self.buffer.append(text[i])
                 i += 1
 
