@@ -19,6 +19,14 @@ Copyright 2025 SwatKat1977
 """
 from parser_state import ParserState
 
+BOLD_ITALIC_MARKDOWN: str = "'''''"
+BOLD_MARKDOWN: str = "'''"
+ITALIC_MARKDOWN: str = "''"
+LINK_MARKDOWN_OPEN: str = "[["
+LINK_MARKDOWN_CLOSE: str = "]]"
+TEMPLATE_MARKDOWN_OPEN: str = "{{"
+TEMPLATE_MARKDOWN_CLOSE: str = "}}"
+
 
 class WikiParser:
     """
@@ -97,7 +105,7 @@ class WikiParser:
             state = self.current_state()
 
             # Handle bold+italic
-            if text[i:i+5] == "'''''":
+            if text[i:i+5] == BOLD_ITALIC_MARKDOWN:
                 if state == ParserState.BOLD_ITALIC:
                     self.flush_buffer()
                     self.pop_state()
@@ -110,7 +118,7 @@ class WikiParser:
                 continue
 
             # Handle bold
-            if text[i:i+3] == "'''":
+            if text[i:i+3] == BOLD_MARKDOWN:
                 if state == ParserState.BOLD:
                     self.flush_buffer()
                     self.pop_state()
@@ -123,7 +131,7 @@ class WikiParser:
                 continue
 
             # Handle italics
-            if text[i:i+2] == "''":
+            if text[i:i+2] == ITALIC_MARKDOWN:
                 if state == ParserState.ITALIC:
                     self.flush_buffer()
                     self.pop_state()
@@ -134,25 +142,28 @@ class WikiParser:
                 continue
 
             # Handle links
-            if text[i:i+2] == "[[":
+            if text[i:i+2] == LINK_MARKDOWN_OPEN:
                 self.flush_buffer()
                 self.push_state(ParserState.LINK)
                 i += 2
                 continue
 
-            if text[i:i+2] == "]]" and state == ParserState.LINK:
+            if text[i:i+2] == LINK_MARKDOWN_CLOSE and \
+               state == ParserState.LINK:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
                 continue
 
             # Handle templates
-            if text[i:i+2] == "{{":
+            if text[i:i+2] == TEMPLATE_MARKDOWN_OPEN:
                 self.flush_buffer()
                 self.push_state(ParserState.TEMPLATE)
                 i += 2
                 continue
-            if text[i:i+2] == "}}" and state == ParserState.TEMPLATE:
+
+            if text[i:i+2] == TEMPLATE_MARKDOWN_CLOSE and \
+               state == ParserState.TEMPLATE:
                 self.flush_buffer()
                 self.pop_state()
                 i += 2
