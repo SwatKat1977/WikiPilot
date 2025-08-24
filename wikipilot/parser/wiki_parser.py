@@ -20,7 +20,9 @@ Copyright 2025 SwatKat1977
 import typing
 
 from parser_state import ParserState
+from parse_result import ParseResult
 from pattern_rule import PatternRule
+from wiki_token import WikiToken
 
 BOLD_ITALIC_MARKDOWN: str = "'''''"
 BOLD_MARKDOWN: str = "'''"
@@ -184,7 +186,7 @@ class WikiParser:
                 i += 1
 
         self.flush_buffer()
-        return self.output
+        return ParseResult(self.output)
 
     def flush_buffer(self) -> None:
         """
@@ -195,7 +197,7 @@ class WikiParser:
         """
         if not self.buffer:
             return
-        state = self.current_state()
+
         content = "".join(self.buffer)
-        self.output.append((state, content))
+        self.output.append(WikiToken(self.current_state(), content))
         self.buffer = []

@@ -17,15 +17,3 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
-from wiki_parser import WikiParser
-
-# Example usage
-parser = WikiParser()
-TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
-             "Also a [[Link]] and a {{Template}}.")
-result = parser.parse(TEXT)
-
-print(f"Result type ({type(result)}): {result}")
-
-# for fsm_state, fsm_content in result:
-#    print(f"{fsm_state}: {fsm_content}")

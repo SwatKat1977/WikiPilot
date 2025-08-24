@@ -17,15 +17,14 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
-from wiki_parser import WikiParser
+from parser_state import ParserState
 
-# Example usage
-parser = WikiParser()
-TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
-             "Also a [[Link]] and a {{Template}}.")
-result = parser.parse(TEXT)
+class WikiToken:
+    """Represents a single parsed segment with its parser state."""
 
-print(f"Result type ({type(result)}): {result}")
+    def __init__(self, state: ParserState, text: str):
+        self.state = state
+        self.text = text
 
-# for fsm_state, fsm_content in result:
-#    print(f"{fsm_state}: {fsm_content}")
+    def __repr__(self):
+        return f"<Token state={self.state.name} text={self.text!r}>"
