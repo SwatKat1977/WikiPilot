@@ -17,3 +17,33 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
+import typing
+from parser_state import ParserState
+from wiki_token import WikiToken
+
+
+class ParseResult:
+    """Holds the structured output of the parser as a list of Token objects."""
+
+    def __init__(self, tokens: typing.List[WikiToken]):
+        self.tokens = tokens
+
+    def __iter__(self):
+        return iter(self.tokens)
+
+    def __len__(self):
+        return len(self.tokens)
+
+    def __getitem__(self, idx):
+        return self.tokens[idx]
+
+    def get_text(self) -> str:
+        """Return the full plain text ignoring states."""
+        return "".join(token.text for token in self.tokens)
+
+    def get_text_by_state(self, state: ParserState) -> str:
+        """Return concatenated text for a specific state."""
+        return "".join(token.text for token in self.tokens if token.state == state)
+
+    def __repr__(self):
+        return f"<ParseResult tokens={self.tokens!r}>"
