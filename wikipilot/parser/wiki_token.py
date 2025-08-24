@@ -21,6 +21,7 @@ from parser_state import ParserState
 
 class WikiToken:
     """Represents a single parsed segment with its parser state."""
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, state: ParserState, text: str):
         self.state = state

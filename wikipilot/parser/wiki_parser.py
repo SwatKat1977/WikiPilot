@@ -17,8 +17,6 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
-import typing
-
 from parser_state import ParserState
 from parse_result import ParseResult
 from pattern_rule import PatternRule
@@ -116,7 +114,7 @@ class WikiParser:
         """
         return self.state_stack[-1]
 
-    def parse(self, text) -> list:
+    def parse(self, text) -> ParseResult:
         """
         Parse the given input text using the defined pattern-matching rules.
 

@@ -18,14 +18,13 @@ Copyright 2025 SwatKat1977
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
 from wiki_parser import WikiParser
+from parse_result import ParseResult
 
 # Example usage
 parser = WikiParser()
 TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
              "Also a [[Link]] and a {{Template}}.")
-result = parser.parse(TEXT)
+result: ParseResult = parser.parse(TEXT)
 
-print(f"Result type ({type(result)}): {result}")
-
-# for fsm_state, fsm_content in result:
-#    print(f"{fsm_state}: {fsm_content}")
+for token in result.tokens:
+    print(f"[TOKEN] State: {token.state} | Text: {token.text}")
