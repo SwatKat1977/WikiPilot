@@ -17,6 +17,8 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
+import typing
+
 from parser_state import ParserState
 from pattern_rule import PatternRule
 
@@ -50,8 +52,8 @@ class WikiParser:
         Starts with the parser in the `TEXT` state, with empty output and buffer.
         """
         self.state_stack = [ParserState.TEXT]
-        self.output = []
-        self.buffer = []
+        self.output: list = []
+        self.buffer: list = []
 
         self.rules = [
             # Toggle states (enter_state == exit_state)
@@ -112,8 +114,46 @@ class WikiParser:
         """
         return self.state_stack[-1]
 
-    def parse(self, text):
-        i = 0
+    def parse(self, text) -> list:
+        """
+        Parse the given input text using the defined pattern-matching rules.
+
+        This method scans through the text character by character, attempting
+        to match tokens defined in `self.rules`. When a rule matches, it may
+        trigger state transitions (entering or exiting parser states) and
+        flush any accumulated buffer content to the output.
+
+        Args:
+            text (str): The input string to parse.
+
+        Returns:
+            Any: The final parsed output, as stored in `self.output`.
+
+        Parsing Logic:
+            - Iterates through the text from left to right.
+            - At each position:
+                * If a rule matches:
+                    - Flushes the buffer.
+                    - If the rule specifies an `exit_state` matching the
+                      current state, the parser pops that state (closing
+                      token).
+                    - If the rule specifies an `enter_state`, the parser
+                      either pushes or toggles that state (opening token).
+                    - Advances the index by the rule's token length.
+                * If no rule matches:
+                    - Appends the current character to the buffer.
+                    - Advances the index by one.
+            - After processing the text, flushes any remaining buffer content.
+
+        Notes:
+            - Matching is case-sensitive and performed using the rules'
+              `PatternRule.matches()` method.
+            - State management depends on helper methods:
+              `current_state()`, `push_state()`, `pop_state()`, and
+              `flush_buffer()`.
+        """
+        i: int = 0
+
         while i < len(text):
             matched = False
 
