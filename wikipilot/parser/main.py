@@ -20,16 +20,17 @@ Copyright 2025 SwatKat1977
 from wiki_parser import WikiParser
 from parse_result import ParseResult
 
+def walk(node, depth=0):
+    indent = " " * depth
+    print(f"{indent}{node.state if isinstance(node, ParseResult) else node}")
+    if isinstance(node, ParseResult) and node.has_children():
+        for child in node:   # iterates direct children
+            walk(child, depth + 2)
+
 # Example usage
 parser = WikiParser()
 TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
              "Also a [[Link]] and a {{Template}}. ''[[Page|display text]]''")
 result: ParseResult = parser.parse(TEXT)
 
-print(f"Result: {result}")
-
-for x in result:
-    print(x)
-
-#for token in result.tokens:
-#    print(f"[TOKEN] State: {token.state} | Text: {token.text}")
+walk(result)

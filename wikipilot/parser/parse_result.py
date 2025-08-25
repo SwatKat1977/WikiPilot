@@ -56,5 +56,15 @@ class ParseResult:
                 parts.append(child.get_text_by_state(state))
         return "".join(parts)
 
+    def __iter__(self):
+        """
+        Iterate over direct children only (not recursive).
+        This keeps the tree structure intact for manual traversal.
+        """
+        return iter(self.children)
+
+    def has_children(self) -> bool:
+        return bool(self.children)
+
     def __repr__(self):
         return f"ParseResult({self.state}, children={self.children!r})"
