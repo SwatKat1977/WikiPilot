@@ -17,20 +17,15 @@ Copyright 2025 SwatKat1977
     You should have received a copy of the GNU General Public License
     along with this program.If not, see < https://www.gnu.org/licenses/>.
 """
-from wiki_parser import WikiParser
-from parse_result import ParseResult
+from parser_state import ParserState
 
-def walk(node, depth=0):
-    indent = " " * depth
-    print(f"{indent}{node.state if isinstance(node, ParseResult) else node}")
-    if isinstance(node, ParseResult) and node.has_children():
-        for child in node:   # iterates direct children
-            walk(child, depth + 2)
+class WikiToken:
+    """Represents a single parsed segment with its parser state."""
+    # pylint: disable=too-few-public-methods
 
-# Example usage
-parser = WikiParser()
-TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
-             "Also a [[Link]] and a {{Template}}. ''[[Page|display text]]''")
-result: ParseResult = parser.parse(TEXT)
+    def __init__(self, state: ParserState, text: str):
+        self.state = state
+        self.text = text
 
-walk(result)
+    def __repr__(self):
+        return f"<Token state={self.state.name} text={self.text!r}>"
