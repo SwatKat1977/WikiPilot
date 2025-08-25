@@ -23,7 +23,7 @@ from parse_result import ParseResult
 # Example usage
 parser = WikiParser()
 TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
-             "Also a [[Link]] and a {{Template}}.")
+             "Also a [[Link]] and a {{Template}}. ''[[Page|display text]]''")
 result: ParseResult = parser.parse(TEXT)
 
 for token in result.tokens:
