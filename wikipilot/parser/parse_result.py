@@ -23,27 +23,38 @@ from wiki_token import WikiToken
 
 
 class ParseResult:
-    """Holds the structured output of the parser as a list of Token objects."""
+    """
+    A tree node representing a parsed segment.
 
-    def __init__(self, tokens: typing.List[WikiToken]):
-        self.tokens = tokens
+    - state: the ParserState of this node
+    - children: nested ParseResults or WikiTokens
+    """
+    def __init__(self, state: ParserState):
+        self.state: ParserState = state
+        self.children: typing.List[typing.Union['ParseResult', WikiToken]] = []
 
-    def __iter__(self):
-        return iter(self.tokens)
-
-    def __len__(self):
-        return len(self.tokens)
-
-    def __getitem__(self, idx):
-        return self.tokens[idx]
+    def add_child(self, child: typing.Union['ParseResult', WikiToken]):
+        self.children.append(child)
 
     def get_text(self) -> str:
-        """Return the full plain text ignoring states."""
-        return "".join(token.text for token in self.tokens)
+        """Flatten all text in this subtree."""
+        parts = []
+        for child in self.children:
+            if isinstance(child, WikiToken):
+                parts.append(child.text)
+            else:
+                parts.append(child.get_text())
+        return "".join(parts)
 
     def get_text_by_state(self, state: ParserState) -> str:
-        """Return concatenated text for a specific state."""
-        return "".join(token.text for token in self.tokens if token.state == state)
+        """Return all text for nodes matching a specific state."""
+        parts = []
+        if self.state == state:
+            parts.append(self.get_text())
+        for child in self.children:
+            if isinstance(child, ParseResult):
+                parts.append(child.get_text_by_state(state))
+        return "".join(parts)
 
     def __repr__(self):
-        return f"<ParseResult tokens={self.tokens!r}>"
+        return f"ParseResult({self.state}, children={self.children!r})"

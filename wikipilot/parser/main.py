@@ -26,5 +26,10 @@ TEXT: str = ("This is ''italic'', '''bold''', and '''''bold+italic'''''."
              "Also a [[Link]] and a {{Template}}. ''[[Page|display text]]''")
 result: ParseResult = parser.parse(TEXT)
 
-for token in result.tokens:
-    print(f"[TOKEN] State: {token.state} | Text: {token.text}")
+print(f"Result: {result}")
+
+for x in result:
+    print(x)
+
+#for token in result.tokens:
+#    print(f"[TOKEN] State: {token.state} | Text: {token.text}")

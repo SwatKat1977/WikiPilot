@@ -51,9 +51,9 @@ class WikiParser:
 
         Starts with the parser in the `TEXT` state, with empty output and buffer.
         """
-        self.state_stack = [ParserState.TEXT]
-        self.output: list = []
-        self.buffer: list = []
+        root = ParseResult(ParserState.TEXT)
+        self.result_stack = [root]   # stack of ParseResult nodes
+        self.buffer = []
 
         self.rules = [
             # Toggle states (enter_state == exit_state)
@@ -87,106 +87,51 @@ class WikiParser:
                         exit_state=ParserState.TEMPLATE),
         ]
 
-    def push_state(self, state):
-        """
-        Push a new parser state onto the state stack.
-
-        Args:
-            state (ParserState): The new parsing state to enter.
-        """
-        self.state_stack.append(state)
-
-    def pop_state(self) -> None:
-        """
-        Pop the most recent parser state from the state stack.
-
-        Ensures that at least one state (TEXT) remains on the stack.
-        """
-        if len(self.state_stack) > 1:
-            self.state_stack.pop()
-
-    def current_state(self) -> ParserState:
-        """
-        Get the current parsing state.
-
-        Returns:
-            ParserState: The parser state at the top of the stack.
-        """
-        return self.state_stack[-1]
+    def current_result(self) -> ParseResult:
+        return self.result_stack[-1]
 
     def parse(self, text) -> ParseResult:
-        """
-        Parse the given input text using the defined pattern-matching rules.
-
-        This method scans through the text character by character, attempting
-        to match tokens defined in `self.rules`. When a rule matches, it may
-        trigger state transitions (entering or exiting parser states) and
-        flush any accumulated buffer content to the output.
-
-        Args:
-            text (str): The input string to parse.
-
-        Returns:
-            Any: The final parsed output, as stored in `self.output`.
-
-        Parsing Logic:
-            - Iterates through the text from left to right.
-            - At each position:
-                * If a rule matches:
-                    - Flushes the buffer.
-                    - If the rule specifies an `exit_state` matching the
-                      current state, the parser pops that state (closing
-                      token).
-                    - If the rule specifies an `enter_state`, the parser
-                      either pushes or toggles that state (opening token).
-                    - Advances the index by the rule's token length.
-                * If no rule matches:
-                    - Appends the current character to the buffer.
-                    - Advances the index by one.
-            - After processing the text, flushes any remaining buffer content.
-
-        Notes:
-            - Matching is case-sensitive and performed using the rules'
-              `PatternRule.matches()` method.
-            - State management depends on helper methods:
-              `current_state()`, `push_state()`, `pop_state()`, and
-              `flush_buffer()`.
-        """
-        i: int = 0
-
+        i = 0
         while i < len(text):
             matched = False
-
             for rule in self.rules:
                 if rule.matches(text, i):
-                    self.flush_buffer()
+                    self.__flush_buffer()
 
-                    if rule.exit_state and self.current_state() == \
-                       rule.exit_state:
-                        # Closing token
-                        self.pop_state()
+                    # Closing state
+                    if rule.exit_state and self.current_result().state == rule.exit_state:
+                        finished = self.result_stack.pop()
+                        self.current_result().add_child(finished)
 
+                    # Opening state
                     elif rule.enter_state:
-                        # Opening or toggle token
-                        if self.current_state() == rule.enter_state:
-                            self.pop_state()
-
+                        # Toggle same state
+                        if self.current_result().state == rule.enter_state:
+                            finished = self.result_stack.pop()
+                            self.current_result().add_child(finished)
                         else:
-                            self.push_state(rule.enter_state)
+                            new_node = ParseResult(rule.enter_state)
+                            self.result_stack.append(new_node)
 
                     i += rule.length
                     matched = True
                     break
 
             if not matched:
-                # Regular text
                 self.buffer.append(text[i])
                 i += 1
 
-        self.flush_buffer()
-        return ParseResult(self.output)
+        # Flush remaining buffer
+        self.__flush_buffer()
 
-    def flush_buffer(self) -> None:
+        # Pop any remaining nodes and attach to root
+        while len(self.result_stack) > 1:
+            finished = self.result_stack.pop()
+            self.result_stack[-1].add_child(finished)
+
+        return self.result_stack[0]
+
+    def __flush_buffer(self) -> None:
         """
         Flush the current buffer into the output list.
 
@@ -196,6 +141,6 @@ class WikiParser:
         if not self.buffer:
             return
 
-        content = "".join(self.buffer)
-        self.output.append(WikiToken(self.current_state(), content))
-        self.buffer = []
+        text = "".join(self.buffer)
+        self.current_result().add_child(WikiToken(ParserState.TEXT, text))
+        self.buffer.clear()
